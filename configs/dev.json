@@ -1,0 +1,9 @@
+{
+    "coin-market-cap" : {
+        "url" : "https://pro-api.coinmarketcap.com/v1",
+        "api-key" : "your-key"
+    },
+    "server" : {
+        "grpcPort" : "50321"
+    }
+}

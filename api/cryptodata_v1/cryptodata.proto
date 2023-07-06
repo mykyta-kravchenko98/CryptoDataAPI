@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package cryptodata_v1;
+
+option go_package = "github.com/mykyta-kravchenko98/CryptoDataAPI/pkg/cryptodata_v1;cryptodata_v1";
+
+service CryptoDataService{
+    rpc GetTop50Coins(GetCryptoCoinsRequest) returns (stream GetCryptoCoinsResponse);
+}
+
+message GetCryptoCoinsRequest{   
+}
+
+message GetCryptoCoinsResponse{
+    repeated Coin Coins = 1;
+    int32 count = 2;
+}
+
+message Coin {
+    int64 id = 1;
+    string name = 2;
+    string symbol = 3;
+    uint32 rank = 4;
+    double price = 5;
+    double volume24h = 6;
+    double volume_change24h = 7;
+    double percent_change1h = 8;
+    double percent_change24h = 9;
+    double percent_change7d = 10;
+    double market_cap = 11;
+}
