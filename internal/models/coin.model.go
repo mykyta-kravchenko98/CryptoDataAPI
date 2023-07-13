@@ -31,17 +31,17 @@ type QuoteDataDto struct {
 }
 
 type Coin struct {
-	Id               int64
-	Name             string
-	Symbol           string
-	Rank             uint32
-	PriceUSD         float64
-	Volume24h        float64
-	VolumeChange24h  float64
-	PercentChange1h  float64
-	PercentChange24h float64
-	PercentChange7d  float64
-	MarketCap        float64
+	Id               int64   `json:"id"`
+	Name             string  `json:"name"`
+	Symbol           string  `json:"symbol"`
+	Rank             uint32  `json:"rank"`
+	PriceUSD         float64 `json:"price"`
+	Volume24h        float64 `json:"volume24h"`
+	VolumeChange24h  float64 `json:"volumeChange24h"`
+	PercentChange1h  float64 `json:"percentChange1h"`
+	PercentChange24h float64 `json:"percentChange24h"`
+	PercentChange7d  float64 `json:"percentChange7d"`
+	MarketCap        float64 `json:"marketCap"`
 }
 
 func (c *Coin) GetDataFromDto(coinDto CoinDto) {

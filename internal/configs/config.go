@@ -10,11 +10,20 @@ type CoinMarketCapConfig struct {
 }
 
 type ServerConfig struct {
-	GRPCPort string `mapstructure:"grpcPort"`
+	GRPCPort      string `mapstructure:"grpcPort"`
+	RESTPort      string `mapstructure:"restPort"`
+	WebSocketPort string `mapstructure:"wsPort"`
 }
+
+type KafkaConfig struct {
+	CryptodataTopic string `mapstructure:"cryptodata-topic"`
+	URL             string `mapstructure:"url"`
+}
+
 type Config struct {
 	CoinMarketCap CoinMarketCapConfig `mapstructure:"coin-market-cap"`
 	Server        ServerConfig        `mapstructure:"server"`
+	Kafka         KafkaConfig         `mapstructure:"kafka"`
 }
 
 var (

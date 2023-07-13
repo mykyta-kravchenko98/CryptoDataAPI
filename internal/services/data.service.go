@@ -11,7 +11,8 @@ type dataService struct {
 }
 
 type DataService interface {
-	GetTop50CoinMarketCurrency() ([]*pb.Coin, error)
+	GetTop50CoinMarketCurrencyProto() ([]*pb.Coin, error)
+	GetTop50CoinMarketCurrency() ([]models.Coin, error)
 }
 
 func NewDataService(c *lrucache.LRUCache) DataService {
@@ -22,12 +23,23 @@ func NewDataService(c *lrucache.LRUCache) DataService {
 	return instance
 }
 
-func (ds *dataService) GetTop50CoinMarketCurrency() ([]*pb.Coin, error) {
+func (ds *dataService) GetTop50CoinMarketCurrencyProto() ([]*pb.Coin, error) {
 	coins := make([]*pb.Coin, 0, 50)
 	for i := 1; i <= 50; i++ {
 		if coin, ok := ds.cache.Get(i).(models.Coin); ok {
 			pc := coin.ProtoCoin()
 			coins = append(coins, pc)
+		}
+	}
+
+	return coins, nil
+}
+
+func (ds *dataService) GetTop50CoinMarketCurrency() ([]models.Coin, error) {
+	coins := make([]models.Coin, 0, 50)
+	for i := 1; i <= 50; i++ {
+		if coin, ok := ds.cache.Get(i).(models.Coin); ok {
+			coins = append(coins, coin)
 		}
 	}
 

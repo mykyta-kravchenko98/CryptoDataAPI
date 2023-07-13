@@ -2,10 +2,14 @@ syntax = "proto3";
 
 package cryptodata_v1;
 
+import "google/api/annotations.proto";
+
 option go_package = "github.com/mykyta-kravchenko98/CryptoDataAPI/pkg/cryptodata_v1;cryptodata_v1";
 
 service CryptoDataService{
-    rpc GetTop50Coins(GetCryptoCoinsRequest) returns (stream GetCryptoCoinsResponse);
+    rpc GetTop50Coins(GetCryptoCoinsRequest) returns (stream GetCryptoCoinsResponse){
+        option (google.api.http) = {get: "/v1/cryptodata/get_top_50_coins"};
+    }
 }
 
 message GetCryptoCoinsRequest{   

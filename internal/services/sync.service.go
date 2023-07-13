@@ -18,7 +18,7 @@ type syncService struct {
 }
 
 type SyncService interface {
-	SyncTop50CoinMarketCurrency() error
+	SyncTop50CoinMarketCurrency() ([]models.Coin, error)
 }
 
 func NewSyncService(c *lrucache.LRUCache, conf configs.CoinMarketCapConfig) SyncService {
@@ -30,7 +30,7 @@ func NewSyncService(c *lrucache.LRUCache, conf configs.CoinMarketCapConfig) Sync
 	return instance
 }
 
-func (s *syncService) SyncTop50CoinMarketCurrency() error {
+func (s *syncService) SyncTop50CoinMarketCurrency() ([]models.Coin, error) {
 	headers := http.Header{}
 	headers.Set("X-CMC_PRO_API_KEY", s.config.APIKey)
 	headers.Set("Accept", "application/json")
@@ -39,7 +39,7 @@ func (s *syncService) SyncTop50CoinMarketCurrency() error {
 
 	resp, err := rest.Get(url, headers)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
@@ -47,14 +47,16 @@ func (s *syncService) SyncTop50CoinMarketCurrency() error {
 	var response models.GetAllCoinsResponse
 	data, _ := ioutil.ReadAll(resp.Body)
 	if err := json.Unmarshal(data, &response); err != nil {
-		return err
+		return nil, err
 	}
 
+	coins := make([]models.Coin, 0, len(response.Coins))
 	for _, coinDto := range response.Coins {
 		newCoin := models.Coin{}
 		newCoin.GetDataFromDto(coinDto)
 		s.cache.Put(int(newCoin.Rank), newCoin)
+		coins = append(coins, newCoin)
 	}
 
-	return nil
+	return coins, nil
 }

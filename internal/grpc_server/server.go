@@ -1,11 +1,15 @@
 package grpcserver
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
+	"net/http"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/mykyta-kravchenko98/CryptoDataAPI/internal/configs"
 	"github.com/mykyta-kravchenko98/CryptoDataAPI/internal/services"
 	pb "github.com/mykyta-kravchenko98/CryptoDataAPI/pkg/cryptodata_v1"
@@ -20,11 +24,28 @@ type grpcServer struct {
 
 // Start server
 func Init(dataService services.DataService, configs configs.ServerConfig) error {
+	// Создание нового мультиплексора ServeMux
+	mux := runtime.NewServeMux()
+
+	// Registrate gRPC-heandler
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+	err := pb.RegisterCryptoDataServiceHandlerFromEndpoint(context.Background(), mux, fmt.Sprintf(":%s", configs.GRPCPort), opts)
+	if err != nil {
+		log.Fatalf("Cant registrate gRPC server: %v", err)
+	}
+
+	// Создание обработчика для добавления заголовков CORS
+	handler := corsHandler(mux)
+
+	// Запуск HTTP-сервера
+	go func() {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", configs.RESTPort), handler))
+	}()
+
 	if configs.GRPCPort == "" {
-		return errors.New("GRPCPort is empty, can`t init grpcServer")
+		return errors.New("GRPCPort is empty, can't init gRPC server")
 	}
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", configs.GRPCPort))
-
 	if err != nil {
 		return err
 	}
@@ -53,7 +74,7 @@ func (s *grpcServer) GetTop50Coins(req *pb.GetCryptoCoinsRequest, stream pb.Cryp
 			return ctx.Err()
 
 		case <-timerChan:
-			coins, err := s.dataService.GetTop50CoinMarketCurrency()
+			coins, err := s.dataService.GetTop50CoinMarketCurrencyProto()
 			if err != nil {
 				return err
 			}
@@ -64,4 +85,25 @@ func (s *grpcServer) GetTop50Coins(req *pb.GetCryptoCoinsRequest, stream pb.Cryp
 			timerChan = time.After(time.Minute * 1)
 		}
 	}
+}
+
+// For CORS handling
+func corsHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// any domain access
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		// allow methods
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		// allow headers
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Heandle OPTIONS request
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// send request to next heandler
+		handler.ServeHTTP(w, r)
+	})
 }
